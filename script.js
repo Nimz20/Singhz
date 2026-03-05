@@ -121,9 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = contactForm.querySelector('button[type="submit"]');
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
             const originalText = btn.innerHTML;
 
             // Loading state
@@ -132,31 +129,31 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.opacity = '0.7';
 
             try {
-                // Submit to Formspree (or similar provider) to keep email hidden
-                const response = await fetch('https://formspree.io/f/nimal@singhz.co.za', {
-                    method: 'POST',
+                // Submit to Formsubmit using native FormData
+                const formData = new FormData(contactForm);
+                const response = await fetch(contactForm.action, {
+                    method: contactForm.method,
+                    body: formData,
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        email: email,
-                        message: message
-                    })
+                        'Accept': 'application/json'
+                    }
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (response.ok && data.success !== "false") {
                     btn.innerHTML = '<span class="btn-text">MESSAGE SENT</span>';
                     btn.style.borderColor = 'var(--color-gold-base)';
                     contactForm.reset();
                 } else {
-                    btn.innerHTML = '<span class="btn-text">ERROR LOGGED</span>';
+                    btn.innerHTML = '<span class="btn-text">ERROR SENDING</span>';
                     btn.style.borderColor = '#ff4444';
+                    console.error("Form error:", data.message || data);
                 }
             } catch (error) {
                 btn.innerHTML = '<span class="btn-text">NETWORK ERROR</span>';
                 btn.style.borderColor = '#ff4444';
+                console.error("Network error:", error);
             }
 
             // Reset button after 3s
